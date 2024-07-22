@@ -7,6 +7,9 @@
 		{
 			"path": "..\\jai"
 		},
+		{
+			"path": "..\\GGPOng"
+		},
 	],
 	"build_systems":
 	[
