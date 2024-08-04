@@ -25,12 +25,12 @@
 					"shell_cmd" : "jai build.jai",
 				},
 				{
-					"name" : "build web",
-					"shell_cmd" : "jai build.jai - web",
+					"name" : "build & run",
+					"shell_cmd" : "jai build.jai - run",
 				},
 				{
-					"name" : "build & run",
-					"shell_cmd" : "jai build.jai & .\\bin\\ggpong.exe",
+					"name" : "build & debug",
+					"shell_cmd" : "jai build.jai - run debug",
 				},
 			]
 		}

@@ -19,6 +19,12 @@ copy_file_if_newer :: (source_path: string, destination_path: string) -> (copied
 
 build :: ()
 {
+    // Read arguments
+    args := get_build_options().compile_time_command_line;
+
+    debug := array_find(args, "debug");
+    run := array_find(args, "run");
+
     // Make bin directory
    	make_directory_if_it_does_not_exist(BUILD_OUTPUT_DIRECTORY, recursive = true);
 
@@ -34,21 +40,68 @@ build :: ()
         log(tprint("Copied % -> %", source_pdb_path, target_pdb_path));
 
    	// Compile
-    w := compiler_create_workspace();
+    w := compiler_create_workspace(BUILD_NAME);
     
     options := get_build_options();
     options.output_path = BUILD_OUTPUT_DIRECTORY;
     options.output_executable_name = BUILD_NAME;
     options.use_natvis_compatible_types = true;
-    set_optimization(*options, .DEBUG);
+    if debug
+    {
+        set_optimization(*options, .DEBUG);
+    }
     set_build_options(options, w);
+    
+    error_count: = 0;
+    compiler_begin_intercept(w);
     add_build_file("src/main.jai", w);
+    while true
+    {
+        message: = compiler_wait_for_message();
+        if message.kind == {
+            case .ERROR; error_count += 1;
+            case .COMPLETE; break;
+        }
+    }
+    compiler_end_intercept(w);
+    if error_count != 0
+    {
+        log(tprint("Compilation failed with % error% :@", error_count, ifx error_count > 1 then "s" else ""));
+        return;
+    }
+    log("Compilation completed without error :)");
 
     // No executable for this workspace.
-   	set_build_options_dc(.{do_output=false});
+    set_build_options_dc(.{do_output=false});
+
+    if run
+    {
+        exe_path: = tprint("%/%.exe", BUILD_OUTPUT_DIRECTORY, BUILD_NAME);
+        cmd: []string = .[
+            exe_path,
+            "-p1"
+        ];
+        if debug
+        {
+            debug_cmd: [..]string;
+            array_add(*debug_cmd, "remedybg", "-g", "-q");
+            array_add(*debug_cmd, tprint("%.rdbg", BUILD_NAME));
+            result, output_string: = run_command(..debug_cmd, capture_and_return_output= true);
+            print("\n");
+            log(output_string);
+        }
+        else
+        {
+            // Run executable
+            result, output_string: = run_command(..cmd, capture_and_return_output= true);
+            print("\n");
+            log(output_string);
+        }
+    }
 }
 
 #import "Basic";
 #import "File";
 #import "File_Utilities";
 #import "Compiler";
+#import "Process";
