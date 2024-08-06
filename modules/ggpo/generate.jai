@@ -56,7 +56,7 @@ generate_bindings :: (args: [] string) -> bool
         log_stripped_declarations = false;
         generate_compile_time_struct_checks = false;
 
-        visitor   = raylib_visitor;
+        visitor = declaration_visitor;
     }
 
     return generate_bindings(opts, output_filename);
@@ -65,7 +65,7 @@ generate_bindings :: (args: [] string) -> bool
 DECLARATIONS_TO_OMIT :: string.[
 ];
 
-raylib_visitor :: (decl: *Declaration, parent_decl: *Declaration) -> Declaration_Visit_Result
+declaration_visitor :: (decl: *Declaration, parent_decl: *Declaration) -> Declaration_Visit_Result
 {
     if !parent_decl
     {

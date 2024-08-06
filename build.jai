@@ -3,20 +3,6 @@
 BUILD_NAME :: "ggpong";
 BUILD_OUTPUT_DIRECTORY :: "bin";
 
-copy_file_if_newer :: (source_path: string, destination_path: string) -> (copied: bool)
-{
-    source_modtime, source_size, source_exists: = file_modtime_and_size(source_path);
-    destination_modtime, destination_size, destination_exists: = file_modtime_and_size(destination_path);
-    if !source_exists
-        return false;
-
-    if destination_exists && destination_modtime >= source_modtime
-        return false;
-
-    copy_file(source_path, destination_path);
-    return true;
-}
-
 build :: ()
 {
     // Read arguments
@@ -24,22 +10,15 @@ build :: ()
 
     debug := array_find(args, "debug");
     run := array_find(args, "run");
+    two_instances := array_find(args, "two-instances");
 
     // Make bin directory
-   	make_directory_if_it_does_not_exist(BUILD_OUTPUT_DIRECTORY, recursive = true);
+    make_directory_if_it_does_not_exist(BUILD_OUTPUT_DIRECTORY, recursive = true);
 
-   	// Copy raylib dll
-    source_dll_path: = "modules/raylib/windows/raylib.dll"; 
-   	target_dll_path: = tprint("%/raylib.dll", BUILD_OUTPUT_DIRECTORY);
-    if copy_file_if_newer(source_dll_path, target_dll_path)
-        log(tprint("Copied % -> %", source_dll_path, target_dll_path));
+    // Copy raylib dll
+    copy_file_set_if_newer("modules/raylib/windows", BUILD_OUTPUT_DIRECTORY, "raylib", .["dll", "pdb"]);
 
-    source_pdb_path: = "modules/raylib/windows/raylib.pdb";
-    target_pdb_path: = tprint("%/raylib.pdb", BUILD_OUTPUT_DIRECTORY);
-    if copy_file_if_newer(source_pdb_path, target_pdb_path)
-        log(tprint("Copied % -> %", source_pdb_path, target_pdb_path));
-
-   	// Compile
+    // Compile
     w := compiler_create_workspace(BUILD_NAME);
     
     options := get_build_options();
@@ -60,7 +39,15 @@ build :: ()
         message: = compiler_wait_for_message();
         if message.kind == {
             case .ERROR; error_count += 1;
-            case .COMPLETE; break;
+            case .COMPLETE;
+            {
+                mc := cast(*Message_Complete) message;
+                if mc.error_code != .NONE 
+                {
+                    error_count += 1;
+                }
+                break;
+            }
         }
     }
     compiler_end_intercept(w);
@@ -79,7 +66,6 @@ build :: ()
         exe_path: = tprint("%/%.exe", BUILD_OUTPUT_DIRECTORY, BUILD_NAME);
         cmd: []string = .[
             exe_path,
-            "-p1"
         ];
         if debug
         {
@@ -92,10 +78,19 @@ build :: ()
         }
         else
         {
+
             // Run executable
-            result, output_string: = run_command(..cmd, capture_and_return_output= true);
-            print("\n");
-            log(output_string);
+            if two_instances
+            {
+                run_command(..cmd, "-p1");
+                run_command(..cmd, "-p2");
+            }
+            else
+            {
+                result, output_string: = run_command(..cmd, capture_and_return_output= true);
+                print("\n");
+                log(output_string);
+            }
         }
     }
 }
@@ -105,3 +100,4 @@ build :: ()
 #import "File_Utilities";
 #import "Compiler";
 #import "Process";
+#import "yae";

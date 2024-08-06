@@ -8,7 +8,7 @@
 			"path": "..\\jai"
 		},
 		{
-			"path": "..\\GGPOng"
+			"path": "..\\..\\GGPOng"
 		},
 	],
 	"build_systems":
@@ -27,6 +27,10 @@
 				{
 					"name" : "build & run",
 					"shell_cmd" : "jai build.jai - run",
+				},
+				{
+					"name" : "build & run two",
+					"shell_cmd" : "jai build.jai - run two-instances",
 				},
 				{
 					"name" : "build & debug",

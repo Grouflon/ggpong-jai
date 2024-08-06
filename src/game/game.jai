@@ -44,7 +44,7 @@ game_shutdown :: (using game: *Game)
 }
 
 game_update :: (using game: *Game, input: [2]int)
-{
+{    
     frame_number += 1;
 
     if (state == .Engage && (input[0] != 0 || input[1] != 0))
@@ -107,7 +107,7 @@ game_draw :: (using game: *Game)
 
 game_reset :: (using game: *Game)
 {
-    seed = cast(u64) (rl.GetTime() * 10000.0);
+    seed = cast(u64) (frame_number);
     random_seed(seed);
 
     just_scored_player = -1;

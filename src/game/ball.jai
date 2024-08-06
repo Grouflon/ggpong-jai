@@ -27,7 +27,7 @@ ball_update :: (using ball: *Ball, gs: *Game)
         }
     }
     // players
-    for i: 0..2
+    for i: 0..1
     {
         if (check_player_collision(ball, *gs.players[i]))
         {
@@ -59,7 +59,7 @@ ball_update :: (using ball: *Ball, gs: *Game)
         }
     }*/
     // players
-    for i: 0..2
+    for i: 0..1
     {
         if (check_player_collision(ball, *gs.players[i]))
         {
